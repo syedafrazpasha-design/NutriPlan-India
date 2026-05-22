@@ -24,15 +24,16 @@ const FoodDB = [
   { id: 1, name: "Maggi", time: "10 mins", type: "General", tags: ["Kids Favorite", "Veggies"], image: "./maggi.png", ingredients: ["1 Pack Noodles", "Mixed Veggies", "Tastemaker"], recipe: "1. Boil water in a pan. 2. Add veggies and cook. 3. Add noodles and tastemaker." },
   { id: 2, name: "Aloo Paratha", time: "20 mins", type: "General", tags: ["Energy", "Carbs"], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Aloo_Paratha_also_known_as_Batatay_Jo_Phulko.jpg/1280px-Aloo_Paratha_also_known_as_Batatay_Jo_Phulko.jpg", ingredients: ["Wheat Flour Dough", "Boiled Potato", "Mild Spices", "Ghee"], recipe: "1. Mash potato with spices. 2. Stuff into dough and roll flat. 3. Cook on a tawa with ghee." },
   { id: 3, name: "Poha", time: "15 mins", type: "General", tags: ["Iron", "Light Breakfast"], image: "https://upload.wikimedia.org/wikipedia/commons/8/80/Poha.jpg", ingredients: ["1 cup Poha", "Peanuts", "Onion", "Turmeric"], recipe: "1. Wash poha. 2. Sauté peanuts and veggies with turmeric. 3. Mix poha and cook for 2 mins." },
-  { id: 4, name: "Samosa", time: "30 mins", type: "General", tags: ["Quick Snack", "Carbs"], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Samosas%2C_snack_food_at_Wikipedia%27s_16th_Birthday_celebration_in_Chittagong_%2801%29.jpg/1280px-Samosas%2C_snack_food_at_Wikipedia%27s_16th_Birthday_celebration_in_Chittagong_%2801%29.jpg", ingredients: ["Dough", "Mashed Potatoes", "Peas", "Oil"], recipe: "1. Make potato filling. 2. Stuff in dough cones. 3. Fry or bake until golden brown." },
-  { id: 5, name: "Idli", time: "20 mins", type: "General", tags: ["Light Food", "Steamed"], image: "https://upload.wikimedia.org/wikipedia/commons/1/11/Idli_Sambar.JPG", ingredients: ["1 cup Suji", "1/2 cup Curd", "Eno", "Carrot"], recipe: "1. Mix suji, curd, and water into batter. 2. Add Eno. 3. Steam in idli maker for 10 mins." },
-  { id: 6, name: "Oats", time: "10 mins", type: "General", tags: ["Fiber", "Healthy"], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Oatmeal_%281%29.jpg/1280px-Oatmeal_%281%29.jpg", ingredients: ["1/2 cup Oats", "Onion", "Tomato", "Coriander"], recipe: "1. Sauté onion and tomato. 2. Add oats and water. 3. Cook for 5 mins." },
-  { id: 7, name: "Khichdi", time: "20 mins", type: "Personalized", tags: ["Protein", "Easy Digestion"], image: "https://upload.wikimedia.org/wikipedia/commons/6/63/Dall_Khichdi.jpg", ingredients: ["1/2 cup Rice", "1/4 cup Moong Dal", "Turmeric", "Ghee"], recipe: "1. Wash rice and dal. 2. Pressure cook with water and turmeric. 3. Serve with warm ghee." },
+  { id: 4, name: "Palak Paneer Bites", time: "20 mins", type: "General", tags: ["Calcium", "Iron", "Vitamins"], image: "./palak_paneer.png", ingredients: ["Paneer Cubes", "Spinach Puree", "Mild Spices", "Olive Oil"], recipe: "1. Blanch and puree spinach. 2. Pan-sear paneer cubes with mild spices. 3. Pour spinach puree over paneer and simmer for 5 mins." },
+  { id: 5, name: "Ragi Dosa", time: "15 mins", type: "General", tags: ["Calcium", "Fiber", "Gluten Free"], image: "./ragi_dosa.png", ingredients: ["Ragi Flour", "Urad Dal Batter", "Salt", "Water"], recipe: "1. Mix ragi flour with standard dosa batter and water. 2. Spread thin on a hot greased tawa. 3. Cook until crispy on both sides." },
+  { id: 6, name: "Oats Upma", time: "15 mins", type: "General", tags: ["Fiber", "Healthy Breakfast"], image: "./oats_upma.png", ingredients: ["Rolled Oats", "Mixed Veggies", "Mustard Seeds", "Curry Leaves"], recipe: "1. Dry roast oats for 2 mins. 2. Sauté mustard seeds, curry leaves, and veggies. 3. Add roasted oats and warm water, cook covered for 5 mins." },
+  { id: 7, name: "Moong Dal Khichdi", time: "20 mins", type: "Personalized", tags: ["Protein", "Easy Digestion", "Comfort Food"], image: "./moong_dal_khichdi.png", ingredients: ["Yellow Moong Dal", "Rice", "Turmeric", "Ghee"], recipe: "1. Wash rice and dal thoroughly. 2. Sauté with turmeric and ghee in a pressure cooker. 3. Cook with water for 3 whistles." },
   { id: 8, name: "Curd Rice", time: "10 mins", type: "Personalized", tags: ["Calcium", "Probiotics"], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Curd_Rice.jpg/1280px-Curd_Rice.jpg", ingredients: ["1/2 cup Soft Cooked Rice", "3 tbsp Fresh Curd", "Salt"], recipe: "1. Mash the warm cooked rice. 2. Mix in fresh curd and salt. 3. Serve cool." },
   { id: 9, name: "Tomato Soup", time: "15 mins", type: "Personalized", tags: ["Vitamins", "Light Food"], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Tomato_soup%2C_plant-based_%2844040252791%29.jpg/1280px-Tomato_soup%2C_plant-based_%2844040252791%29.jpg", ingredients: ["3 Tomatoes", "1 Carrot", "Salt"], recipe: "1. Boil tomatoes and carrot until soft. 2. Blend into a smooth puree. 3. Serve warm." },
   { id: 10, name: "Upma", time: "15 mins", type: "Personalized", tags: ["Carbs", "Light Breakfast"], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/A_photo_of_Upma.jpg/1280px-A_photo_of_Upma.jpg", ingredients: ["1/2 cup Suji", "Ghee", "Curry Leaves", "Water"], recipe: "1. Roast suji. 2. Boil water. 3. Sauté curry leaves, mix hot water into suji slowly." },
   { id: 11, name: "Dal Soup", time: "20 mins", type: "Personalized", tags: ["Protein", "Very Light"], image: "https://upload.wikimedia.org/wikipedia/commons/6/61/EgFoodLentilSoup.jpg", ingredients: ["2 tbsp Yellow Moong Dal", "Turmeric", "Salt", "Water"], recipe: "1. Wash dal and pressure cook. 2. Mash into a smooth liquid soup. 3. Serve warm." },
-  { id: 12, name: "Apple Mash", time: "10 mins", type: "Personalized", tags: ["Vitamins", "Soft"], image: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Applesauce.jpg", ingredients: ["1 Apple", "Water"], recipe: "1. Peel and core the apple. 2. Steam until soft. 3. Mash completely with a fork." }
+  { id: 12, name: "Apple Mash", time: "10 mins", type: "Personalized", tags: ["Vitamins", "Soft"], image: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Applesauce.jpg", ingredients: ["1 Apple", "Water"], recipe: "1. Peel and core the apple. 2. Steam until soft. 3. Mash completely with a fork." },
+  { id: 13, name: "Atta Noodles", time: "12 mins", type: "General", tags: ["Kids Favorite", "Veggies", "Whole Wheat"], image: "./atta_noodles.png", ingredients: ["Whole Wheat Atta Noodles Pack", "Chopped Carrots & Peas", "Mild Spices"], recipe: "1. Boil atta noodles. 2. Sauté chopped veggies and mild spices in olive oil. 3. Toss boiled noodles with veggies." }
 ];
 
 // Router setup
@@ -261,12 +262,12 @@ const Pages = {
               <label>Child's Name</label>
               <input type="text" id="c_name" required value="${report.name}">
             </div>
-            <div class="flex gap-4" style="flex-wrap: wrap;">
-              <div class="input-group" style="flex: 1">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="input-group">
                 <label>Age (years)</label>
                 <input type="number" id="c_age" required value="${report.age}">
               </div>
-              <div class="input-group" style="flex: 1">
+              <div class="input-group">
                 <label>Weight (kg)</label>
                 <input type="number" id="c_weight" value="${report.weight}">
               </div>
@@ -445,7 +446,7 @@ const Pages = {
         <i data-lucide="arrow-left" style="width: 16px; height: 16px"></i> Back
       </button>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div style="grid-column: span 1;">
+        <div class="md:col-span-1">
           <img src="${recipe.image}" alt="${recipe.name}" class="img-responsive mb-4" style="width: 100%; height: 300px; object-fit: cover;">
           <div class="card">
             <h3 class="mb-4">Preparation Duration</h3>
@@ -454,7 +455,7 @@ const Pages = {
             </div>
           </div>
         </div>
-        <div style="grid-column: span 2;" class="card">
+        <div class="md:col-span-2 card">
           <h1 class="mb-2">${recipe.name}</h1>
           <div class="flex gap-2 mb-6">
             ${recipe.tags.map(tag => `<span class="badge">${tag}</span>`).join('')}
