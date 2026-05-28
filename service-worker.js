@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutriplan-cache-v2';
+const CACHE_NAME = 'nutriplan-cache-v3';
 const ASSETS = [
   './',
   './index.html',

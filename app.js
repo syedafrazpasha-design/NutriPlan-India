@@ -58,17 +58,53 @@ const DefaultDoctors = [
 
 // State Management
 const State = {
-  user: JSON.parse(localStorage.getItem('nutriplan_user')) || null,
-  childReport: JSON.parse(localStorage.getItem('nutriplan_child')) || null,
+  user: (() => {
+    try {
+      return JSON.parse(localStorage.getItem('nutriplan_user')) || null;
+    } catch (e) {
+      console.error("Error parsing user from localStorage:", e);
+      return null;
+    }
+  })(),
+  childReport: (() => {
+    try {
+      return JSON.parse(localStorage.getItem('nutriplan_child')) || null;
+    } catch (e) {
+      console.error("Error parsing childReport from localStorage:", e);
+      return null;
+    }
+  })(),
   doctors: (() => {
-    let saved = JSON.parse(localStorage.getItem('nutriplan_doctors'));
-    if (saved) {
-      return saved.map(d => {
-        if (d.id >= 1 && d.id <= 5) {
-          d.preloaded = true;
-        }
-        return d;
-      });
+    try {
+      let saved = JSON.parse(localStorage.getItem('nutriplan_doctors'));
+      if (saved && Array.isArray(saved)) {
+        return saved.map(d => {
+          // If it's a preloaded doctor (IDs 1 to 5), sync with latest DefaultDoctors data
+          // to ensure they have all updated fields (like whatsapp) but preserve status.
+          if (d.id >= 1 && d.id <= 5) {
+            d.preloaded = true;
+            const defaultDoc = DefaultDoctors.find(def => def.id === d.id);
+            if (defaultDoc) {
+              return { ...defaultDoc, status: d.status || defaultDoc.status };
+            }
+          }
+          
+          // For custom doctors, sanitize and make sure all properties are present
+          return {
+            id: d.id,
+            name: d.name || "Unknown Doctor",
+            qualification: d.qualification || "",
+            clinicName: d.clinicName || d.clinic || "Clinic", // fallback to legacy 'clinic' property
+            address: d.address || "",
+            phone: d.phone || "",
+            whatsapp: d.whatsapp || d.phone || "", // fallback to phone if whatsapp is missing
+            status: d.status || "Available",
+            preloaded: !!d.preloaded
+          };
+        });
+      }
+    } catch (e) {
+      console.error("Error parsing doctors from localStorage:", e);
     }
     return DefaultDoctors;
   })(),
@@ -743,15 +779,27 @@ const Pages = {
       if (d.status === 'Busy') statusClass = 'busy';
       else if (d.status === 'Away') statusClass = 'away';
 
+      // Defensive formatting for doctor initials avatar
+      const doctorName = d.name || "Unknown Doctor";
+      const initials = doctorName.split(' ')
+        .map(n => n ? n[0] : '')
+        .filter(n => n && n !== 'D' && n !== 'r' && n !== '.')
+        .join('')
+        .slice(0, 2)
+        .toUpperCase() || "DR";
+
+      // Formatted whatsapp number (strip plus sign, spaces, dashes)
+      const whatsappNum = d.whatsapp ? d.whatsapp.replace(/\+/g, '').replace(/\s/g, '').replace(/-/g, '') : '';
+
       card.innerHTML = `
         <div class="flex justify-between items-start gap-4 mb-4">
           <div class="flex items-center gap-3">
             <div class="doc-avatar-circle">
-              ${d.name.split(' ').map(n => n[0]).filter(n => n !== 'D' && n !== 'r' && n !== '.').join('').slice(0, 2).toUpperCase()}
+              ${initials}
             </div>
             <div>
-              <h3 class="mb-0" style="font-size: 1.15rem;">${d.name}</h3>
-              <span class="badge" style="padding: 0.1rem 0.5rem; font-size: 0.7rem; background: rgba(74, 222, 128, 0.15);">${d.qualification}</span>
+              <h3 class="mb-0" style="font-size: 1.15rem;">${doctorName}</h3>
+              <span class="badge" style="padding: 0.1rem 0.5rem; font-size: 0.7rem; background: rgba(74, 222, 128, 0.15);">${d.qualification || 'Pediatrician'}</span>
             </div>
           </div>
           <div class="flex items-center gap-2">
@@ -764,26 +812,38 @@ const Pages = {
           <div class="flex items-start gap-2 mb-2">
             <i data-lucide="building" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
             <div>
-              <strong class="text-sm">${d.clinicName}</strong>
+              <strong class="text-sm">${d.clinicName || 'Clinic'}</strong>
             </div>
           </div>
           <div class="flex items-start gap-2 mb-2">
             <i data-lucide="map-pin" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
-            <span class="text-muted text-sm">${d.address}</span>
+            <span class="text-muted text-sm">${d.address || 'Address not available'}</span>
           </div>
           <div class="flex items-start gap-2">
             <i data-lucide="phone" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
-            <span class="text-muted text-sm">${d.phone}</span>
+            <span class="text-muted text-sm">${d.phone || 'No phone'}</span>
           </div>
         </div>
 
         <div class="flex gap-2">
-          <a href="tel:${d.phone}" class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
-            <i data-lucide="phone-call" style="width:14px; height:14px;"></i> Call Clinic
-          </a>
-          <a href="https://wa.me/${d.whatsapp.replace('+', '')}?text=Hello%20${encodeURIComponent(d.name)},%20I%20got%20your%20contact%20from%20NutriPlan%20India.%20I%20have%20a%20question%20regarding%20my%20child's%20health." target="_blank" class="btn btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 10px rgba(34,197,94,0.3);">
-            <i data-lucide="message-square" style="width:14px; height:14px;"></i> WhatsApp
-          </a>
+          ${d.phone ? `
+            <a href="tel:${d.phone}" class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
+              <i data-lucide="phone-call" style="width:14px; height:14px;"></i> Call Clinic
+            </a>
+          ` : `
+            <button class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; cursor: not-allowed;" disabled>
+              <i data-lucide="phone-off" style="width:14px; height:14px;"></i> No Phone
+            </button>
+          `}
+          ${whatsappNum ? `
+            <a href="https://wa.me/${whatsappNum}?text=Hello%20${encodeURIComponent(doctorName)},%20I%20got%20your%20contact%20from%20NutriPlan%20India.%20I%20have%20a%20question%20regarding%20my%20child's%20health." target="_blank" class="btn btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 10px rgba(34,197,94,0.3);">
+              <i data-lucide="message-square" style="width:14px; height:14px;"></i> WhatsApp
+            </a>
+          ` : `
+            <button class="btn btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: var(--border); color: var(--text-muted); cursor: not-allowed;" disabled>
+              <i data-lucide="message-square" style="width:14px; height:14px;"></i> No WhatsApp
+            </button>
+          `}
         </div>
 
         ${!d.preloaded ? `
