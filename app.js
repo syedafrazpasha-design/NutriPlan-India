@@ -1,7 +1,56 @@
+const defaultDoctors = [
+  {
+    id: 1,
+    name: "Dr. Srinivas P",
+    qualification: "MBBS, DCH (Pediatrics)",
+    clinic: "Pavan Children Clinic",
+    address: "Ashoka Road, Tumakuru, Karnataka 572101",
+    phone: "+91 94480 76210",
+    email: "dr.srinivasp@example.com"
+  },
+  {
+    id: 2,
+    name: "Dr. B V Shivaprakash",
+    qualification: "MBBS, MD (Pediatrics)",
+    clinic: "Prathap Baby Clinic",
+    address: "2nd Cross, Near City Union Bank, MG Road, Tumakuru, Karnataka 572101",
+    phone: "+91 98452 34912",
+    email: "dr.shivaprakash@example.com"
+  },
+  {
+    id: 3,
+    name: "Dr. Veena H",
+    qualification: "MBBS, DNB (Pediatrics)",
+    clinic: "Kanasu Children's Clinic",
+    address: "Church Circle, Ashoka Road, Opposite Sub Registrar Office, Tumakuru, Karnataka 572101",
+    phone: "+91 94812 11090",
+    email: "dr.veena@example.com"
+  },
+  {
+    id: 4,
+    name: "Dr. Sharada R",
+    qualification: "MBBS, DCH",
+    clinic: "Siddhi Child Clinic",
+    address: "Annapurna Arcade, Bangalore - Honnavar Highway, Near Doddamane Hospital, Tumakuru, Karnataka 572101",
+    phone: "+91 90084 55321",
+    email: "dr.sharada@example.com"
+  },
+  {
+    id: 5,
+    name: "Dr. Lohit K",
+    qualification: "MBBS, MD (Paediatrics)",
+    clinic: "Aditi Multi-Speciality Hospital",
+    address: "Avalipalya, 80ft Road, Sira Gate, Tumakuru, Karnataka 572106",
+    phone: "+91 81622 11210",
+    email: "dr.lohit@example.com"
+  }
+];
+
 // State Management
 const State = {
   user: JSON.parse(localStorage.getItem('nutriplan_user')) || null,
   childReport: JSON.parse(localStorage.getItem('nutriplan_child')) || null,
+  doctors: JSON.parse(localStorage.getItem('nutriplan_doctors')) || defaultDoctors,
   
   saveUser: (user) => {
     State.user = user;
@@ -11,6 +60,11 @@ const State = {
   saveChildReport: (report) => {
     State.childReport = report;
     localStorage.setItem('nutriplan_child', JSON.stringify(report));
+  },
+
+  saveDoctors: (doctors) => {
+    State.doctors = doctors;
+    localStorage.setItem('nutriplan_doctors', JSON.stringify(doctors));
   },
   
   logout: () => {
@@ -105,6 +159,7 @@ const Components = {
           <a href="#/general-food" class="nav-link ${Router.currentPath === '/general-food' ? 'active' : ''}">General Foods</a>
           <a href="#/personalized" class="nav-link ${Router.currentPath === '/personalized' ? 'active' : ''}">For Your Child</a>
           <a href="#/recipe-gen" class="nav-link ${Router.currentPath === '/recipe-gen' ? 'active' : ''}">Recipe Gen</a>
+          <a href="#/doctors" class="nav-link ${Router.currentPath === '/doctors' ? 'active' : ''}">Doctors</a>
           <a href="#/profile" class="nav-link ${Router.currentPath === '/profile' ? 'active' : ''}">Profile</a>
           <button id="logout-btn" class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.875rem;">Logout</button>
         </div>
@@ -474,6 +529,247 @@ const Pages = {
       </div>
     `;
     return div;
+  },
+
+  Doctors: () => {
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div class="mb-6 flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <h1>Doctors in Tumkur</h1>
+          <p class="text-muted">Pediatricians and child specialists located in Tumkur, Karnataka, India.</p>
+        </div>
+        <button class="btn btn-primary" id="add-doctor-btn">
+          <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i> Add Doctor
+        </button>
+      </div>
+
+      <div class="mb-6" style="position: relative; max-width: 400px;">
+        <input type="text" id="doctor-search" placeholder="Search by name, clinic, qualification..." style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);">
+        <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;"></i>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="doctors-grid">
+      </div>
+
+      <div id="doctor-modal" class="modal-overlay">
+        <div class="modal-content card animate-fade-in">
+          <div class="flex justify-between items-center mb-4">
+            <h3 id="modal-title">Add Doctor</h3>
+            <button id="modal-close-x" style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0;"><i data-lucide="x" style="width: 24px; height: 24px;"></i></button>
+          </div>
+          <form id="doctor-form">
+            <input type="hidden" id="doc-id">
+            <div class="input-group">
+              <label>Doctor's Name</label>
+              <input type="text" id="doc-name" required placeholder="e.g. Dr. Ramesh Kumar">
+            </div>
+            <div class="input-group">
+              <label>Qualification</label>
+              <input type="text" id="doc-qual" required placeholder="e.g. MBBS, MD (Pediatrics)">
+            </div>
+            <div class="input-group">
+              <label>Clinic/Hospital Name</label>
+              <input type="text" id="doc-clinic" required placeholder="e.g. Tumkur Child Care Clinic">
+            </div>
+            <div class="input-group">
+              <label>Clinic Address</label>
+              <input type="text" id="doc-address" required placeholder="e.g. MG Road, Tumakuru, Karnataka">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="input-group">
+                <label>Phone Number</label>
+                <input type="text" id="doc-phone" required placeholder="e.g. +91 98765 43210">
+              </div>
+              <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="doc-email" required placeholder="e.g. doctor@example.com">
+              </div>
+            </div>
+            <div class="flex gap-4 mt-6">
+              <button type="button" class="btn btn-outline" style="flex: 1;" id="close-modal">Cancel</button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Save Profile</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    const searchInput = div.querySelector('#doctor-search');
+    const grid = div.querySelector('#doctors-grid');
+    const modal = div.querySelector('#doctor-modal');
+    const modalTitle = div.querySelector('#modal-title');
+    const doctorForm = div.querySelector('#doctor-form');
+    const addBtn = div.querySelector('#add-doctor-btn');
+    const closeBtn = div.querySelector('#close-modal');
+    const closeXBtn = div.querySelector('#modal-close-x');
+
+    const renderGrid = (searchQuery = '') => {
+      grid.innerHTML = '';
+      const query = searchQuery.toLowerCase();
+      
+      const filtered = State.doctors.filter(d => 
+        d.name.toLowerCase().includes(query) ||
+        d.clinic.toLowerCase().includes(query) ||
+        d.qualification.toLowerCase().includes(query) ||
+        d.address.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="md:col-span-2 text-center py-12 card">
+            <i data-lucide="users" style="width: 48px; height: 48px; color: var(--text-muted); margin: 0 auto 1rem;"></i>
+            <h3>No Doctors Found</h3>
+            <p class="text-muted">No doctors found matching "${searchQuery}"</p>
+          </div>
+        `;
+        if(window.lucide) window.lucide.createIcons({ root: grid });
+        return;
+      }
+
+      filtered.forEach(doc => {
+        const card = document.createElement('div');
+        card.className = 'card doctor-card';
+        
+        const initials = doc.name.split(' ').map(n => n[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
+        
+        card.innerHTML = `
+          <div class="doctor-card-header mb-4">
+            <div class="doctor-avatar-circle">${initials}</div>
+            <div class="doctor-card-title-info">
+              <h3 class="mb-1">${doc.name}</h3>
+              <div class="flex items-center gap-1 text-sm text-primary-dark font-medium">
+                <i data-lucide="award" style="width: 16px; height: 16px;"></i> ${doc.qualification}
+              </div>
+            </div>
+          </div>
+          
+          <div class="doctor-details mb-4">
+            <div class="doctor-detail-item">
+              <i data-lucide="building" class="detail-icon"></i>
+              <div>
+                <span class="detail-label">Clinic/Hospital</span>
+                <span class="detail-val">${doc.clinic}</span>
+              </div>
+            </div>
+            <div class="doctor-detail-item">
+              <i data-lucide="map-pin" class="detail-icon"></i>
+              <div>
+                <span class="detail-label">Address</span>
+                <span class="detail-val">${doc.address}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mb-4">
+            <a href="tel:${doc.phone}" class="btn btn-outline doctor-action-btn flex-1" style="font-size: 0.875rem; padding: 0.5rem; gap: 0.25rem;">
+              <i data-lucide="phone" style="width: 16px; height: 16px;"></i> Call
+            </a>
+            <a href="mailto:${doc.email}" class="btn btn-outline doctor-action-btn flex-1" style="font-size: 0.875rem; padding: 0.5rem; gap: 0.25rem;">
+              <i data-lucide="mail" style="width: 16px; height: 16px;"></i> Email
+            </a>
+          </div>
+
+          <div class="flex justify-end gap-2 border-top pt-3" style="border-top: 1px solid var(--border)">
+            <button class="btn btn-outline edit-doc-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" data-id="${doc.id}">
+              <i data-lucide="edit" style="width: 14px; height: 14px;"></i> Edit
+            </button>
+            <button class="btn btn-outline delete-doc-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--error); border-color: rgba(239, 68, 68, 0.2);" data-id="${doc.id}">
+              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Delete
+            </button>
+          </div>
+        `;
+        
+        card.querySelector('.edit-doc-btn').addEventListener('click', () => {
+          openEditModal(doc);
+        });
+
+        card.querySelector('.delete-doc-btn').addEventListener('click', () => {
+          if (confirm(`Are you sure you want to delete ${doc.name}?`)) {
+            const updated = State.doctors.filter(d => d.id !== doc.id);
+            State.saveDoctors(updated);
+            renderGrid(searchInput.value);
+          }
+        });
+
+        grid.appendChild(card);
+      });
+
+      if (window.lucide) {
+        window.lucide.createIcons({ root: grid });
+      }
+    };
+
+    const openAddModal = () => {
+      modalTitle.innerText = "Add Doctor Profile";
+      doctorForm.reset();
+      div.querySelector('#doc-id').value = '';
+      modal.classList.add('active');
+      if (window.lucide) window.lucide.createIcons({ root: modal });
+    };
+
+    const openEditModal = (doc) => {
+      modalTitle.innerText = "Edit Doctor Profile";
+      div.querySelector('#doc-id').value = doc.id;
+      div.querySelector('#doc-name').value = doc.name;
+      div.querySelector('#doc-qual').value = doc.qualification;
+      div.querySelector('#doc-clinic').value = doc.clinic;
+      div.querySelector('#doc-address').value = doc.address;
+      div.querySelector('#doc-phone').value = doc.phone;
+      div.querySelector('#doc-email').value = doc.email;
+      modal.classList.add('active');
+      if (window.lucide) window.lucide.createIcons({ root: modal });
+    };
+
+    const closeModal = () => {
+      modal.classList.remove('active');
+    };
+
+    addBtn.addEventListener('click', openAddModal);
+    closeBtn.addEventListener('click', closeModal);
+    closeXBtn.addEventListener('click', closeModal);
+    
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      renderGrid(e.target.value);
+    });
+
+    doctorForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const idVal = div.querySelector('#doc-id').value;
+      const name = div.querySelector('#doc-name').value;
+      const qualification = div.querySelector('#doc-qual').value;
+      const clinic = div.querySelector('#doc-clinic').value;
+      const address = div.querySelector('#doc-address').value;
+      const phone = div.querySelector('#doc-phone').value;
+      const email = div.querySelector('#doc-email').value;
+
+      let updatedDocs = [...State.doctors];
+
+      if (idVal) {
+        const targetId = parseInt(idVal);
+        updatedDocs = updatedDocs.map(d => d.id === targetId ? { ...d, name, qualification, clinic, address, phone, email } : d);
+      } else {
+        const newId = State.doctors.length > 0 ? Math.max(...State.doctors.map(d => d.id)) + 1 : 1;
+        updatedDocs.push({ id: newId, name, qualification, clinic, address, phone, email });
+      }
+
+      State.saveDoctors(updatedDocs);
+      closeModal();
+      renderGrid(searchInput.value);
+    });
+
+    setTimeout(() => {
+      renderGrid();
+    }, 0);
+
+    return div;
   }
 };
 
@@ -484,6 +780,7 @@ Router.add('/profile', Pages.Profile);
 Router.add('/general-food', Pages.GeneralFood);
 Router.add('/personalized', Pages.PersonalizedFood);
 Router.add('/recipe-gen', Pages.RecipeGen);
+Router.add('/doctors', Pages.Doctors);
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
