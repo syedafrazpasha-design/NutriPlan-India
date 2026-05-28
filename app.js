@@ -7,7 +7,8 @@ const DefaultDoctors = [
     address: "B.H. Road, Tumkur, Karnataka 572101",
     phone: "+91 816 227 3011",
     whatsapp: "+919483523011",
-    status: "Available"
+    status: "Available",
+    preloaded: true
   },
   {
     id: 2,
@@ -17,7 +18,8 @@ const DefaultDoctors = [
     address: "Shira Road, Tumkur, Karnataka 572106",
     phone: "+91 816 221 2100",
     whatsapp: "+919448821001",
-    status: "Busy"
+    status: "Busy",
+    preloaded: true
   },
   {
     id: 3,
@@ -27,7 +29,8 @@ const DefaultDoctors = [
     address: "SIT Main Road, Ashok Nagar, Tumkur, Karnataka 572103",
     phone: "+91 816 225 1420",
     whatsapp: "+919900251420",
-    status: "Available"
+    status: "Available",
+    preloaded: true
   },
   {
     id: 4,
@@ -37,7 +40,8 @@ const DefaultDoctors = [
     address: "Mandipet, Tumkur, Karnataka 572101",
     phone: "+91 816 227 8965",
     whatsapp: "+919845728965",
-    status: "Away"
+    status: "Away",
+    preloaded: true
   },
   {
     id: 5,
@@ -47,7 +51,8 @@ const DefaultDoctors = [
     address: "Gandhi Nagar, Tumkur, Karnataka 572102",
     phone: "+91 816 228 1123",
     whatsapp: "+919632121123",
-    status: "Available"
+    status: "Available",
+    preloaded: true
   }
 ];
 
@@ -55,7 +60,18 @@ const DefaultDoctors = [
 const State = {
   user: JSON.parse(localStorage.getItem('nutriplan_user')) || null,
   childReport: JSON.parse(localStorage.getItem('nutriplan_child')) || null,
-  doctors: JSON.parse(localStorage.getItem('nutriplan_doctors')) || DefaultDoctors,
+  doctors: (() => {
+    let saved = JSON.parse(localStorage.getItem('nutriplan_doctors'));
+    if (saved) {
+      return saved.map(d => {
+        if (d.id >= 1 && d.id <= 5) {
+          d.preloaded = true;
+        }
+        return d;
+      });
+    }
+    return DefaultDoctors;
+  })(),
   
   saveUser: (user) => {
     State.user = user;
@@ -73,10 +89,17 @@ const State = {
     }
     const idx = State.doctors.findIndex(d => d.id === doctor.id);
     if (idx !== -1) {
+      // Preserve preloaded state if existing
+      doctor.preloaded = State.doctors[idx].preloaded;
       State.doctors[idx] = doctor;
     } else {
       State.doctors.push(doctor);
     }
+    localStorage.setItem('nutriplan_doctors', JSON.stringify(State.doctors));
+  },
+
+  deleteDoctor: (id) => {
+    State.doctors = State.doctors.filter(d => d.id !== id);
     localStorage.setItem('nutriplan_doctors', JSON.stringify(State.doctors));
   },
 
@@ -556,6 +579,8 @@ const Pages = {
     const div = document.createElement('div');
     div.className = 'animate-fade-in';
     
+    let editingDoctorId = null;
+
     div.innerHTML = `
       <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -569,7 +594,7 @@ const Pages = {
 
       <!-- Add Doctor Panel -->
       <div id="add-doctor-panel" class="card mb-6" style="display: none; animation: slideDownFade 0.4s ease-out;">
-        <h3 class="mb-4">Register Doctor / Clinic</h3>
+        <h3 id="form-panel-title" class="mb-4">Register Doctor / Clinic</h3>
         <form id="add-doctor-form">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="input-group">
@@ -611,7 +636,7 @@ const Pages = {
           </div>
           <div class="flex gap-2 justify-end mt-4">
             <button type="button" id="cancel-add-btn" class="btn btn-outline">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Doctor Profile</button>
+            <button type="submit" id="submit-doc-btn" class="btn btn-primary">Save Doctor Profile</button>
           </div>
         </form>
       </div>
@@ -637,8 +662,20 @@ const Pages = {
         </div>
       </div>
 
-      <!-- Doctors Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="doctors-grid">
+      <!-- Verified Section -->
+      <h2 class="mb-4 mt-6 flex items-center gap-2" style="font-size: 1.3rem;">
+        <i data-lucide="shield-check" style="color: var(--primary-dark);"></i>
+        Verified Pediatricians
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="verified-grid">
+      </div>
+
+      <!-- My Doctors Section -->
+      <h2 class="mb-4 mt-8 flex items-center gap-2" style="font-size: 1.3rem;">
+        <i data-lucide="users" style="color: var(--secondary-dark);"></i>
+        My Doctors
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="my-doctors-grid">
       </div>
     `;
 
@@ -647,21 +684,33 @@ const Pages = {
     const cancelBtn = div.querySelector('#cancel-add-btn');
     const form = div.querySelector('#add-doctor-form');
     const searchInput = div.querySelector('#search-docs');
-    const grid = div.querySelector('#doctors-grid');
+    const verifiedGrid = div.querySelector('#verified-grid');
+    const myDoctorsGrid = div.querySelector('#my-doctors-grid');
+
+    const resetForm = () => {
+      form.reset();
+      editingDoctorId = null;
+      div.querySelector('#form-panel-title').textContent = 'Register Doctor / Clinic';
+      div.querySelector('#submit-doc-btn').textContent = 'Save Doctor Profile';
+    };
 
     toggleBtn.addEventListener('click', () => {
       panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-      if (window.lucide) window.lucide.createIcons({ root: panel });
+      if (panel.style.display === 'none') {
+        resetForm();
+      } else {
+        if (window.lucide) window.lucide.createIcons({ root: panel });
+      }
     });
+
     cancelBtn.addEventListener('click', () => {
       panel.style.display = 'none';
-      form.reset();
+      resetForm();
     });
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const newDoc = {
-        id: Date.now(),
+      const docData = {
         name: div.querySelector('#doc_name').value,
         qualification: div.querySelector('#doc_qual').value,
         clinicName: div.querySelector('#doc_clinic').value,
@@ -670,11 +719,114 @@ const Pages = {
         whatsapp: div.querySelector('#doc_whatsapp').value,
         status: div.querySelector('#doc_status').value
       };
-      State.saveDoctor(newDoc);
+
+      if (editingDoctorId) {
+        docData.id = editingDoctorId;
+        State.saveDoctor(docData);
+      } else {
+        docData.id = Date.now();
+        docData.preloaded = false;
+        State.saveDoctor(docData);
+      }
+
       panel.style.display = 'none';
-      form.reset();
+      resetForm();
       renderGrid();
     });
+
+    const createDoctorCard = (d) => {
+      const card = document.createElement('div');
+      card.className = 'card doctor-card animate-fade-in';
+      card.setAttribute('data-doc-id', d.id);
+      
+      let statusClass = 'available';
+      if (d.status === 'Busy') statusClass = 'busy';
+      else if (d.status === 'Away') statusClass = 'away';
+
+      card.innerHTML = `
+        <div class="flex justify-between items-start gap-4 mb-4">
+          <div class="flex items-center gap-3">
+            <div class="doc-avatar-circle">
+              ${d.name.split(' ').map(n => n[0]).filter(n => n !== 'D' && n !== 'r' && n !== '.').join('').slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <h3 class="mb-0" style="font-size: 1.15rem;">${d.name}</h3>
+              <span class="badge" style="padding: 0.1rem 0.5rem; font-size: 0.7rem; background: rgba(74, 222, 128, 0.15);">${d.qualification}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="status-indicator ${statusClass}"></span>
+            <span class="status-text text-sm font-medium ${statusClass}">${d.status}</span>
+          </div>
+        </div>
+
+        <div class="doc-details mb-4">
+          <div class="flex items-start gap-2 mb-2">
+            <i data-lucide="building" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
+            <div>
+              <strong class="text-sm">${d.clinicName}</strong>
+            </div>
+          </div>
+          <div class="flex items-start gap-2 mb-2">
+            <i data-lucide="map-pin" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
+            <span class="text-muted text-sm">${d.address}</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <i data-lucide="phone" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
+            <span class="text-muted text-sm">${d.phone}</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <a href="tel:${d.phone}" class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
+            <i data-lucide="phone-call" style="width:14px; height:14px;"></i> Call Clinic
+          </a>
+          <a href="https://wa.me/${d.whatsapp.replace('+', '')}?text=Hello%20${encodeURIComponent(d.name)},%20I%20got%20your%20contact%20from%20NutriPlan%20India.%20I%20have%20a%20question%20regarding%20my%20child's%20health." target="_blank" class="btn btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 10px rgba(34,197,94,0.3);">
+            <i data-lucide="message-square" style="width:14px; height:14px;"></i> WhatsApp
+          </a>
+        </div>
+
+        ${!d.preloaded ? `
+          <div class="mt-4 pt-3 border-top flex items-center justify-end gap-2">
+            <button class="btn btn-outline btn-edit" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 6px;">
+              <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Edit
+            </button>
+            <button class="btn btn-outline btn-delete" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 6px; color: var(--error); border-color: rgba(239, 68, 68, 0.2);">
+              <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i> Delete
+            </button>
+          </div>
+        ` : ''}
+      `;
+
+      if (!d.preloaded) {
+        card.querySelector('.btn-edit').addEventListener('click', () => {
+          editingDoctorId = d.id;
+          panel.style.display = 'block';
+          div.querySelector('#form-panel-title').textContent = 'Edit Doctor Profile';
+          div.querySelector('#submit-doc-btn').textContent = 'Update Doctor Profile';
+          
+          div.querySelector('#doc_name').value = d.name;
+          div.querySelector('#doc_qual').value = d.qualification;
+          div.querySelector('#doc_clinic').value = d.clinicName;
+          div.querySelector('#doc_addr').value = d.address;
+          div.querySelector('#doc_phone').value = d.phone;
+          div.querySelector('#doc_whatsapp').value = d.whatsapp;
+          div.querySelector('#doc_status').value = d.status;
+
+          panel.scrollIntoView({ behavior: 'smooth' });
+          if (window.lucide) window.lucide.createIcons({ root: panel });
+        });
+
+        card.querySelector('.btn-delete').addEventListener('click', () => {
+          if (confirm(`Are you sure you want to delete ${d.name}?`)) {
+            State.deleteDoctor(d.id);
+            renderGrid();
+          }
+        });
+      }
+
+      return card;
+    };
 
     const renderGrid = () => {
       const query = searchInput.value.toLowerCase();
@@ -685,6 +837,7 @@ const Pages = {
         d.address.toLowerCase().includes(query)
       );
 
+      // Status counters
       let avail = 0, busy = 0, away = 0;
       State.doctors.forEach(d => {
         if (d.status === 'Available') avail++;
@@ -695,91 +848,41 @@ const Pages = {
       div.querySelector('#count-busy').textContent = busy;
       div.querySelector('#count-away').textContent = away;
 
-      grid.innerHTML = '';
-      if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full text-center py-8">
-            <p class="text-muted">No doctors found matching "${query}".</p>
+      // Render Verified Section
+      verifiedGrid.innerHTML = '';
+      const verifiedDocs = filtered.filter(d => d.preloaded);
+      if (verifiedDocs.length === 0) {
+        verifiedGrid.innerHTML = `
+          <div class="col-span-full text-center py-6">
+            <p class="text-muted text-sm">No verified pediatricians match your search.</p>
           </div>
         `;
-        return;
+      } else {
+        verifiedDocs.forEach(d => {
+          verifiedGrid.appendChild(createDoctorCard(d));
+        });
       }
 
-      filtered.forEach(d => {
-        const card = document.createElement('div');
-        card.className = 'card doctor-card animate-fade-in';
-        card.setAttribute('data-doc-id', d.id);
-        
-        let statusClass = 'available';
-        if (d.status === 'Busy') statusClass = 'busy';
-        else if (d.status === 'Away') statusClass = 'away';
-
-        card.innerHTML = `
-          <div class="flex justify-between items-start gap-4 mb-4">
-            <div class="flex items-center gap-3">
-              <div class="doc-avatar-circle">
-                ${d.name.split(' ').map(n => n[0]).filter(n => n !== 'D' && n !== 'r' && n !== '.').join('').slice(0, 2).toUpperCase()}
-              </div>
-              <div>
-                <h3 class="mb-0" style="font-size: 1.15rem;">${d.name}</h3>
-                <span class="badge" style="padding: 0.1rem 0.5rem; font-size: 0.7rem; background: rgba(74, 222, 128, 0.15);">${d.qualification}</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="status-indicator ${statusClass}"></span>
-              <span class="status-text text-sm font-medium ${statusClass}">${d.status}</span>
-            </div>
-          </div>
-
-          <div class="doc-details mb-4">
-            <div class="flex items-start gap-2 mb-2">
-              <i data-lucide="building" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
-              <div>
-                <strong class="text-sm">${d.clinicName}</strong>
-              </div>
-            </div>
-            <div class="flex items-start gap-2 mb-2">
-              <i data-lucide="map-pin" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
-              <span class="text-muted text-sm">${d.address}</span>
-            </div>
-            <div class="flex items-start gap-2">
-              <i data-lucide="phone" class="text-muted mt-1" style="width:16px; height:16px; min-width:16px;"></i>
-              <span class="text-muted text-sm">${d.phone}</span>
-            </div>
-          </div>
-
-          <div class="flex gap-2">
-            <a href="tel:${d.phone}" class="btn btn-outline" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
-              <i data-lucide="phone-call" style="width:14px; height:14px;"></i> Call Clinic
-            </a>
-            <a href="https://wa.me/${d.whatsapp.replace('+', '')}?text=Hello%20${encodeURIComponent(d.name)},%20I%20got%20your%20contact%20from%20NutriPlan%20India.%20I%20have%20a%20question%20regarding%20my%20child's%20health." target="_blank" class="btn btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 10px rgba(34,197,94,0.3);">
-              <i data-lucide="message-square" style="width:14px; height:14px;"></i> WhatsApp
-            </a>
-          </div>
-
-          <!-- Status toggle action panel -->
-          <div class="mt-4 pt-3 border-top flex items-center justify-between text-xs text-muted">
-            <span>Change Status (Real-time):</span>
-            <div class="flex gap-1">
-              <button class="status-btn btn-avail" data-status="Available">Available</button>
-              <button class="status-btn btn-busy" data-status="Busy">Busy</button>
-              <button class="status-btn btn-away" data-status="Away">Away</button>
-            </div>
+      // Render My Doctors Section
+      myDoctorsGrid.innerHTML = '';
+      const myDocs = filtered.filter(d => !d.preloaded);
+      if (myDocs.length === 0) {
+        myDoctorsGrid.innerHTML = `
+          <div class="col-span-full text-center py-8 card" style="border-style: dashed; background: rgba(248, 250, 252, 0.5); grid-column: span 2;">
+            <i data-lucide="users" class="text-muted mb-2" style="width: 24px; height: 24px; margin: 0 auto;"></i>
+            <p class="text-muted text-sm mb-0">No custom doctor profiles added yet. Click "Add Doctor" to add your pediatrician.</p>
           </div>
         `;
-
-        card.querySelectorAll('.status-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const status = e.target.getAttribute('data-status');
-            State.updateDoctorStatus(d.id, status);
-            renderGrid();
-          });
+      } else {
+        myDocs.forEach(d => {
+          myDoctorsGrid.appendChild(createDoctorCard(d));
         });
+      }
 
-        grid.appendChild(card);
-      });
-
-      if (window.lucide) window.lucide.createIcons({ root: grid });
+      if (window.lucide) {
+        window.lucide.createIcons({ root: verifiedGrid });
+        window.lucide.createIcons({ root: myDoctorsGrid });
+      }
     };
 
     searchInput.addEventListener('input', renderGrid);
@@ -865,5 +968,5 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.remove();
       }, 500);
     }
-  }, 3000); // 3 seconds delay
+  }, 2000); // 2 seconds delay
 });
