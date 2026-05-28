@@ -488,4 +488,16 @@ Router.add('/recipe-gen', Pages.RecipeGen);
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
   Router.init();
+  
+  // Manage the loading screen delay
+  setTimeout(() => {
+    const loader = document.getElementById('loading-screen');
+    if (loader) {
+      loader.classList.add('fade-out');
+      // Remove loader from DOM after transition completes (matching CSS 0.5s transition)
+      setTimeout(() => {
+        loader.remove();
+      }, 500);
+    }
+  }, 3000); // 3 seconds delay
 });
