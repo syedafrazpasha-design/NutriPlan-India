@@ -534,14 +534,9 @@ const Pages = {
   Doctors: () => {
     const div = document.createElement('div');
     div.innerHTML = `
-      <div class="mb-6 flex justify-between items-center flex-wrap gap-4">
-        <div>
-          <h1>Doctors in Tumkur</h1>
-          <p class="text-muted">Pediatricians and child specialists located in Tumkur, Karnataka, India.</p>
-        </div>
-        <button class="btn btn-primary" id="add-doctor-btn">
-          <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i> Add Doctor
-        </button>
+      <div class="mb-6">
+        <h1>Doctors in Tumkur</h1>
+        <p class="text-muted">Pediatricians and child specialists located in Tumkur, Karnataka, India.</p>
       </div>
 
       <div class="mb-6" style="position: relative; max-width: 400px;">
@@ -551,58 +546,10 @@ const Pages = {
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="doctors-grid">
       </div>
-
-      <div id="doctor-modal" class="modal-overlay">
-        <div class="modal-content card animate-fade-in">
-          <div class="flex justify-between items-center mb-4">
-            <h3 id="modal-title">Add Doctor</h3>
-            <button id="modal-close-x" style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0;"><i data-lucide="x" style="width: 24px; height: 24px;"></i></button>
-          </div>
-          <form id="doctor-form">
-            <input type="hidden" id="doc-id">
-            <div class="input-group">
-              <label>Doctor's Name</label>
-              <input type="text" id="doc-name" required placeholder="e.g. Dr. Ramesh Kumar">
-            </div>
-            <div class="input-group">
-              <label>Qualification</label>
-              <input type="text" id="doc-qual" required placeholder="e.g. MBBS, MD (Pediatrics)">
-            </div>
-            <div class="input-group">
-              <label>Clinic/Hospital Name</label>
-              <input type="text" id="doc-clinic" required placeholder="e.g. Tumkur Child Care Clinic">
-            </div>
-            <div class="input-group">
-              <label>Clinic Address</label>
-              <input type="text" id="doc-address" required placeholder="e.g. MG Road, Tumakuru, Karnataka">
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="input-group">
-                <label>Phone Number</label>
-                <input type="text" id="doc-phone" required placeholder="e.g. +91 98765 43210">
-              </div>
-              <div class="input-group">
-                <label>Email Address</label>
-                <input type="email" id="doc-email" required placeholder="e.g. doctor@example.com">
-              </div>
-            </div>
-            <div class="flex gap-4 mt-6">
-              <button type="button" class="btn btn-outline" style="flex: 1;" id="close-modal">Cancel</button>
-              <button type="submit" class="btn btn-primary" style="flex: 1;">Save Profile</button>
-            </div>
-          </form>
-        </div>
-      </div>
     `;
 
     const searchInput = div.querySelector('#doctor-search');
     const grid = div.querySelector('#doctors-grid');
-    const modal = div.querySelector('#doctor-modal');
-    const modalTitle = div.querySelector('#modal-title');
-    const doctorForm = div.querySelector('#doctor-form');
-    const addBtn = div.querySelector('#add-doctor-btn');
-    const closeBtn = div.querySelector('#close-modal');
-    const closeXBtn = div.querySelector('#modal-close-x');
 
     const renderGrid = (searchQuery = '') => {
       grid.innerHTML = '';
@@ -661,7 +608,7 @@ const Pages = {
             </div>
           </div>
 
-          <div class="flex gap-2 mb-4">
+          <div class="flex gap-2">
             <a href="tel:${doc.phone}" class="btn btn-outline doctor-action-btn flex-1" style="font-size: 0.875rem; padding: 0.5rem; gap: 0.25rem;">
               <i data-lucide="phone" style="width: 16px; height: 16px;"></i> Call
             </a>
@@ -669,29 +616,8 @@ const Pages = {
               <i data-lucide="mail" style="width: 16px; height: 16px;"></i> Email
             </a>
           </div>
-
-          <div class="flex justify-end gap-2 border-top pt-3" style="border-top: 1px solid var(--border)">
-            <button class="btn btn-outline edit-doc-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" data-id="${doc.id}">
-              <i data-lucide="edit" style="width: 14px; height: 14px;"></i> Edit
-            </button>
-            <button class="btn btn-outline delete-doc-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--error); border-color: rgba(239, 68, 68, 0.2);" data-id="${doc.id}">
-              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Delete
-            </button>
-          </div>
         `;
         
-        card.querySelector('.edit-doc-btn').addEventListener('click', () => {
-          openEditModal(doc);
-        });
-
-        card.querySelector('.delete-doc-btn').addEventListener('click', () => {
-          if (confirm(`Are you sure you want to delete ${doc.name}?`)) {
-            const updated = State.doctors.filter(d => d.id !== doc.id);
-            State.saveDoctors(updated);
-            renderGrid(searchInput.value);
-          }
-        });
-
         grid.appendChild(card);
       });
 
@@ -700,69 +626,8 @@ const Pages = {
       }
     };
 
-    const openAddModal = () => {
-      modalTitle.innerText = "Add Doctor Profile";
-      doctorForm.reset();
-      div.querySelector('#doc-id').value = '';
-      modal.classList.add('active');
-      if (window.lucide) window.lucide.createIcons({ root: modal });
-    };
-
-    const openEditModal = (doc) => {
-      modalTitle.innerText = "Edit Doctor Profile";
-      div.querySelector('#doc-id').value = doc.id;
-      div.querySelector('#doc-name').value = doc.name;
-      div.querySelector('#doc-qual').value = doc.qualification;
-      div.querySelector('#doc-clinic').value = doc.clinic;
-      div.querySelector('#doc-address').value = doc.address;
-      div.querySelector('#doc-phone').value = doc.phone;
-      div.querySelector('#doc-email').value = doc.email;
-      modal.classList.add('active');
-      if (window.lucide) window.lucide.createIcons({ root: modal });
-    };
-
-    const closeModal = () => {
-      modal.classList.remove('active');
-    };
-
-    addBtn.addEventListener('click', openAddModal);
-    closeBtn.addEventListener('click', closeModal);
-    closeXBtn.addEventListener('click', closeModal);
-    
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-
     searchInput.addEventListener('input', (e) => {
       renderGrid(e.target.value);
-    });
-
-    doctorForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const idVal = div.querySelector('#doc-id').value;
-      const name = div.querySelector('#doc-name').value;
-      const qualification = div.querySelector('#doc-qual').value;
-      const clinic = div.querySelector('#doc-clinic').value;
-      const address = div.querySelector('#doc-address').value;
-      const phone = div.querySelector('#doc-phone').value;
-      const email = div.querySelector('#doc-email').value;
-
-      let updatedDocs = [...State.doctors];
-
-      if (idVal) {
-        const targetId = parseInt(idVal);
-        updatedDocs = updatedDocs.map(d => d.id === targetId ? { ...d, name, qualification, clinic, address, phone, email } : d);
-      } else {
-        const newId = State.doctors.length > 0 ? Math.max(...State.doctors.map(d => d.id)) + 1 : 1;
-        updatedDocs.push({ id: newId, name, qualification, clinic, address, phone, email });
-      }
-
-      State.saveDoctors(updatedDocs);
-      closeModal();
-      renderGrid(searchInput.value);
     });
 
     setTimeout(() => {
